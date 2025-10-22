@@ -1,0 +1,29 @@
+%% Single page app diagram
+
+sequenceDiagram
+    participant browser
+    participant server
+
+    Note right of browser: The browser starts loading stuff
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/spa
+    activate server
+    server-->>browser: HTML document
+    deactivate server
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/main.css
+    activate server
+    server-->>browser: the css file (main.css)
+    deactivate server
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+    activate server
+    server-->>browser: the JavaScript file (main.js)
+    deactivate server
+
+    Note right of browser: The browser executes the received JavaScript code (fetching data part)
+
+    browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/data.json
+    activate server
+    server-->>browser: Server sends array of notes (JSON format) back to the browser
+    deactivate server
