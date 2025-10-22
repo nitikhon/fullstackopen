@@ -1,0 +1,12 @@
+%% New note in Single page app diagram
+
+sequenceDiagram
+    participant browser
+    participant server
+
+    browser->>server: POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+    activate server
+    server-->>browser: Server sends a JSON {"message":"note created"} back to the browser
+    deactivate server
+
+    Note right of browser: The browser executes the received JavaScript code (rendering notes part)
