@@ -1,0 +1,19 @@
+.notification {
+    padding: 10px;
+    font-size: large;
+    border: 5px solid;
+    background-color: lightgray;
+    color: darkgreen;
+}
+
+.notification--success {
+    color: darkgreen;
+    background-color: lightgreen;
+    border-color: darkgreen;
+}
+
+.notification--error {
+    color: darkred;
+    background-color: #ffd6d6;
+    border-color: darkred;
+}
