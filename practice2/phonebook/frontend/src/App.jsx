@@ -18,8 +18,8 @@ const App = () => {
   })
 
   useEffect(() => {
-    axios
-      .get("http://localhost:3001/persons")
+    personsService
+      .getPersons()
       .then((response) => {
         const data = response.data
         setPersons(data)
