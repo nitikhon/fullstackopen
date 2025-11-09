@@ -22,7 +22,7 @@ const personSchema = new mongoose.Schema({
         validate: {
             validator: function (v) {
                 const splitedNumber = String(v).split("-")
-                return splitedNumber === 2
+                return splitedNumber.length === 2
             },
             message: "Invalid number format (e.g. 09-1234556 and 040-22334455 are valid numbers)"
         },
