@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/Form'
 import Persons from './components/Persons'
-import axios from 'axios'
 import personsService from './services/persons'
 import Notification from './components/Notification'
 import './index.css'
@@ -47,10 +46,13 @@ const App = () => {
             setPersons(newPersons)
             handleNotification(`Added ${updatedPerson.name}`, 'success')
           })
-        return
-      } else {
-        return
+          .catch(error =>
+            handleNotification(
+              error.response.data.error,
+              'error'
+            ))
       }
+      return
     }
 
     personsService
@@ -59,6 +61,11 @@ const App = () => {
         setPersons(persons.concat(person))
         handleNotification(`Added ${person.name}`, 'success')
       })
+      .catch(error =>
+        handleNotification(
+          error.response.data.error,
+          'error'
+        ))
   }
 
   const handleChange = (event) => {
