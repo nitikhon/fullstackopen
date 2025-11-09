@@ -31,58 +31,60 @@ app.get('/info', (req, res, next) => {
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
-  const id = req.params.id
-  Person.findById(id).then(person => {
+  Person.findById(req.params.id).then(person => {
     if (person) {
       res.json(person)
     } else {
-      res.status(404).json({ error: `a person with id = ${id} is not found` })
+      res.status(404).json({ error: `a person with id = ${req.params.id} is not found` })
     }
   }).catch(error => next(error))
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
-  const id = req.params.id
-  Person.findByIdAndDelete(id).then(person => {
+  Person.findByIdAndDelete(req.params.id).then(person => {
     if (person) {
       res.status(204).end()
     } else {
-      return res.status(404).json({ error: `a person with id = ${id} is not found` })
+      res.status(404).json({ error: `a person with id = ${req.params.id} is not found` })
     }
-
   }).catch(error => next(error))
 })
 
 app.post('/api/persons', (req, res, next) => {
   const { name, number } = req.body
 
+  if (!name || !number) {
+    return res.status(400).json({ error: 'name and number are required' })
+  }
+
   Person.findOne({ name: { $regex: name, $options: 'i' } }).then(existedPerson => {
     if (existedPerson) {
       return res.status(400).json({ error: 'name must be unique' })
-    } else {
-      const person = new Person({
-        name,
-        number
-      })
-      person
-        .save()
-        .then(result => res.json(result))
-        .catch(error => next(error))
     }
+
+    const person = new Person({
+      name,
+      number
+    })
+
+    person.save()
+      .then(result => res.json(result))
+      .catch(error => next(error))
   }).catch(error => next(error))
 })
 
 app.put('/api/persons/:id', (req, res, next) => {
-  const { number } = req.body
-  Person.findByIdAndUpdate(req.params.id).then(person => {
-    if (person) {
-      person.number = number
-      person.validate()
-        .then(() => {
-          return person.save()
-        })
-        .then(result => res.json(result))
-        .catch(error => next(error))
+  const { name, number } = req.body
+
+  Person.findByIdAndUpdate(
+    req.params.id,
+    { name, number },
+    { new: true, runValidators: true }
+  ).then(updatedPerson => {
+    if (updatedPerson) {
+      res.json(updatedPerson)
+    } else {
+      res.status(404).json({ error: 'person not found' })
     }
   }).catch(error => next(error))
 })
