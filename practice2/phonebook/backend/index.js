@@ -5,7 +5,6 @@ const morgan = require('morgan')
 const cors = require('cors')
 const PORT = process.env.PORT || 3001
 const Person = require('./models/person')
-const mongoose = require('mongoose')
 
 app.use(express.static('dist'))
 app.use(cors())
@@ -32,7 +31,8 @@ app.get('/info', (req, res, next) => {
 })
 
 app.get('/api/persons/:id', (req, res, next) => {
-  Person.findById(req.params.id).then(person => {
+  const id = req.params.id
+  Person.findById(id).then(person => {
     if (person) {
       res.json(person)
     } else {
@@ -42,7 +42,8 @@ app.get('/api/persons/:id', (req, res, next) => {
 })
 
 app.delete('/api/persons/:id', (req, res, next) => {
-  Person.findByIdAndDelete(req.params.id).then(person => {
+  const id = req.params.id
+  Person.findByIdAndDelete(id).then(person => {
     if (person) {
       res.status(204).end()
     } else {
@@ -57,7 +58,7 @@ app.post('/api/persons', (req, res, next) => {
 
   Person.findOne({ name: { $regex: name, $options: 'i' } }).then(existedPerson => {
     if (existedPerson) {
-      return res.status(400).json({ error: `name must be unique` })
+      return res.status(400).json({ error: 'name must be unique' })
     } else {
       const person = new Person({
         name,
