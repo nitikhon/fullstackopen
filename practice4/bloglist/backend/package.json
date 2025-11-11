@@ -7,9 +7,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "start": "NODE_ENV='production' npm index.js",
-    "test": "NODE_ENV='test' node --test",
-    "dev": "NODE_ENV='development' nodemon .",
+    "start": "cross-env NODE_ENV='production' npm index.js",
+    "test": "cross-env NODE_ENV='test' node --test",
+    "dev": "cross-env NODE_ENV='development' nodemon .",
     "lint": "eslint .",
     "lintfix": "eslint . --fix"
   },
@@ -21,6 +21,7 @@
     "nodemon": "^3.1.10"
   },
   "dependencies": {
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "lodash": "^4.17.21",
