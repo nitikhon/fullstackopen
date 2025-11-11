@@ -7,8 +7,9 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "node --test",
-    "dev": "nodemon ."
+    "start": "NODE_ENV='production' npm index.js",
+    "test": "NODE_ENV='test' node --test",
+    "dev": "NODE_ENV='development' nodemon ."
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
