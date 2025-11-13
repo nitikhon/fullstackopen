@@ -1,0 +1,17 @@
+{
+  "watch": [
+    "controllers/",
+    "models/", 
+    "utils/",
+    "app.js",
+    "index.js"
+  ],
+  "ext": "js,json",
+  "ignore": [
+    "node_modules/",
+    "tests/",
+    "*.test.js"
+  ],
+  "exec": "node index.js",
+  "legacyWatch": true
+}
