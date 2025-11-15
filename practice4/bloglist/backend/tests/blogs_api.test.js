@@ -3,18 +3,41 @@ const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
-const Blog = require('../models/blogs')
+const Blog = require('../models/blog')
 const helper = require('./test_helper')
+const User = require('../models/user')
 
 const api = supertest(app)
 
-describe('when there is initially some blogs saved', () => {
+describe('when there is initially some blogs saved and a user created', () => {
+  let token
+
   beforeEach(async () => {
     await Blog.deleteMany({})
-    for (let blog of helper.initialBlogs) {
-      let newBlog = new Blog(blog)
-      await newBlog.save()
-    }
+    await User.deleteMany({})
+
+    const bcrypt = require('bcrypt')
+    const saltRounds = 10
+    const passwordHash = await bcrypt.hash('plainPassword123', saltRounds)
+
+    const user = new User({
+      username: 'cookie123',
+      passwordHash: passwordHash,
+      name: 'cookie and milk'
+    })
+    await user.save()
+
+    const blogsWithUsers = helper.initialBlogs.map((blog) => ({
+      ...blog,
+      user: user._id
+    }))
+
+    await Blog.insertMany(blogsWithUsers)
+
+    const response = await api
+      .post('/api/login')
+      .send({ username: 'cookie123', password: 'hashedP@ssw0rd' })
+    token = response.body.token
   })
 
   test('blogs are returned as json', async () => {
@@ -49,6 +72,7 @@ describe('when there is initially some blogs saved', () => {
 
       await api
         .post('/api/blogs')
+        .set('Authorization', `Bearer ${token}`)
         .send(blog)
         .expect(201)
 
@@ -65,7 +89,10 @@ describe('when there is initially some blogs saved', () => {
           url: 'tacos.com',
         }
 
-        const response = await api.post('/api/blogs').send(newBlog)
+        const response = await api
+          .post('/api/blogs')
+          .set('Authorization', `Bearer ${token}`)
+          .send(newBlog)
 
         const blogs = await helper.blogsInDb()
         const blog = blogs.find(blog => blog.id === response.body.id)
@@ -82,6 +109,7 @@ describe('when there is initially some blogs saved', () => {
 
         await api
           .post('/api/blogs')
+          .set('Authorization', `Bearer ${token}`)
           .send(newBlog)
           .expect(400)
       })
@@ -95,9 +123,24 @@ describe('when there is initially some blogs saved', () => {
 
         await api
           .post('/api/blogs')
+          .set('Authorization', `Bearer ${token}`)
           .send(newBlog)
           .expect(400)
       })
+    })
+
+    test('returns 401 if no token is provided', async () => {
+      const blog = {
+        title: 'single data test',
+        author: 'juan gonsalez',
+        url: 'tacos.com',
+        likes: 11,
+      }
+
+      await api
+        .post('/api/blogs')
+        .send(blog)
+        .expect(401)
     })
   })
 
@@ -107,7 +150,16 @@ describe('when there is initially some blogs saved', () => {
       const id = blogs[0].id
       await api
         .delete(`/api/blogs/${id}`)
+        .set('Authorization', `Bearer ${token}`)
         .expect(204)
+    })
+
+    test('returns 401 if not token is provided', async () => {
+      const blogs = await helper.blogsInDb()
+      const id = blogs[0].id
+      await api
+        .delete(`/api/blogs/${id}`)
+        .expect(401)
     })
   })
 
@@ -118,10 +170,21 @@ describe('when there is initially some blogs saved', () => {
       blog.likes += 10
       const result = await api
         .put(`/api/blogs/${blog.id}`)
+        .set('Authorization', `Bearer ${token}`)
         .send(blog)
         .expect(200)
 
-      assert.deepStrictEqual(result.body, blog)
+      assert.strictEqual(result.body.likes, blog.likes)
+    })
+
+    test('returns 401 if no token is provided', async () => {
+      const blogs = await helper.blogsInDb()
+      const blog = blogs[0]
+      blog.likes += 10
+      await api
+        .put(`/api/blogs/${blog.id}`)
+        .send(blog)
+        .expect(401)
     })
   })
 })

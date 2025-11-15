@@ -1,35 +1,79 @@
 const blogRouter = require('express').Router()
-const Blog = require('../models/blogs')
+const Blog = require('../models/blog')
+const User = require('../models/user')
+const middleware = require('../utils/middleware')
 
-blogRouter.get('/', async (request, response) => {
-  const blogs = await Blog.find({})
-  response.json(blogs)
+blogRouter.get('/', async (req, res) => {
+  const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
+  res.status(200).json(blogs)
 })
 
-blogRouter.post('/', async (request, response) => {
-  const { title, url } = request.body
+blogRouter.post('/', middleware.userExtractor, async (req, res, next) => {
+  const { title, url } = req.body
+
   if (!title || !url) {
-    return response.status(400).end()
+    return res.status(400).end()
   }
 
-  const blog = new Blog(request.body)
-  const result = await blog.save()
-  response.status(201).json(result)
+  try {
+    const userId = req.user
+
+    const user = await User.findById(userId)
+    if (!user) { return res.status(400).json({ error: 'userId missing or not valid' }) }
+
+    const blog = new Blog({ ...req.body, user: userId })
+    const result = await blog.save()
+    user.blogs = user.blogs.concat(result._id)
+    await user.save()
+
+    res.status(201).json(result)
+  } catch (error) {
+    next(error)
+  }
 })
 
-blogRouter.delete('/:id', async (request, response) => {
-  await Blog.findByIdAndDelete(request.params.id)
-  response.status(204).end()
+blogRouter.put('/:id', middleware.userExtractor, async (req, res, next) => {
+  try {
+    const userId = req.user
+
+    const blog = await Blog.findById(req.params.id)
+    if (!blog) {
+      return res.status(400).json({ error: 'invalid blog id' })
+    }
+
+    if (blog.user.toString() !== userId) {
+      return res.status(401).json({ error: 'only the owner can update this blog' })
+    }
+
+    const result = await Blog.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    )
+    res.status(200).json(result)
+  } catch (error) {
+    next(error)
+  }
 })
 
-blogRouter.put('/:id', async (request, response) => {
-  const blog = request.body
-  const result = await Blog.findByIdAndUpdate(
-    request.params.id,
-    blog,
-    { new: true, runValidators: true }
-  )
-  response.status(200).json(result)
+blogRouter.delete('/:id', middleware.userExtractor, async (req, res, next) => {
+  try {
+    const userId = req.user
+
+    const blog = await Blog.findById(req.params.id)
+    if (!blog) {
+      return res.status(400).json({ error: 'invalid blog id' })
+    }
+
+    if (blog.user.toString() !== userId) {
+      return res.status(401).json({ error: 'only the owner can delete this blog' })
+    }
+
+    await Blog.findByIdAndDelete(req.params.id)
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
 })
 
 module.exports = blogRouter
