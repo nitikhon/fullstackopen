@@ -77,4 +77,23 @@ blogRouter.delete('/:id', middleware.userExtractor, async (req, res, next) => {
   }
 })
 
+blogRouter.patch('/:id/like', async (req, res, next) => {
+  try {
+    const blog = await Blog.findById(req.params.id)
+    if (!blog) {
+      return res.status(404).json({ error: 'Blog not found' })
+    }
+
+    const result = await Blog.findByIdAndUpdate(
+      req.params.id,
+      { $inc: { likes: 1 } },
+      { new: true }
+    ).populate('user', { username: 1, name: 1 })
+
+    res.status(200).json(result)
+  } catch (error) {
+    next(error)
+  }
+})
+
 module.exports = blogRouter

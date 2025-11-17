@@ -187,6 +187,16 @@ describe('when there is initially some blogs saved and a user created', () => {
         .expect(401)
     })
   })
+
+  test('like some blog', async () => {
+    const blogs = await helper.blogsInDb()
+    const blog = blogs[0]
+    const result = await api
+      .patch(`/api/blogs/${blog.id}/like`)
+      .expect(200)
+
+    assert.strictEqual(result.body.likes, blog.likes + 1)
+  })
 })
 
 after(async () => {

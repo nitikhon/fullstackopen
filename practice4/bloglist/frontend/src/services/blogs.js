@@ -37,4 +37,9 @@ const deleteBlog = async (id) => {
   return request.status
 }
 
-export default { getAll, createBlog, update, deleteBlog, setToken }
+const likeBlog = async (id) => {
+  const request = await axios.patch(`${baseUrl}/${id}/like`)
+  return request.data
+}
+
+export default { getAll, createBlog, update, deleteBlog, likeBlog, setToken }
