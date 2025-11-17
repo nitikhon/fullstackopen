@@ -26,7 +26,8 @@ blogRouter.post('/', middleware.userExtractor, async (req, res, next) => {
     user.blogs = user.blogs.concat(result._id)
     await user.save()
 
-    res.status(201).json(result)
+    const populatedResult = await result.populate('user', { username: 1, name: 1 })
+    res.status(201).json(populatedResult)
   } catch (error) {
     next(error)
   }
@@ -35,7 +36,6 @@ blogRouter.post('/', middleware.userExtractor, async (req, res, next) => {
 blogRouter.put('/:id', middleware.userExtractor, async (req, res, next) => {
   try {
     const userId = req.user
-
     const blog = await Blog.findById(req.params.id)
     if (!blog) {
       return res.status(400).json({ error: 'invalid blog id' })
@@ -49,7 +49,8 @@ blogRouter.put('/:id', middleware.userExtractor, async (req, res, next) => {
       req.params.id,
       req.body,
       { new: true, runValidators: true }
-    )
+    ).populate('user', { username: 1, name: 1 })
+
     res.status(200).json(result)
   } catch (error) {
     next(error)
